@@ -1,10 +1,12 @@
 package com.example.movietest.view
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -13,16 +15,23 @@ import com.example.movietest.R
 import com.example.movietest.model.MovieList
 import com.example.movietest.model.MovieResponse
 import com.example.movietest.model.remote.MoviesService
+import com.example.movietest.presenter.PresenterList
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 private const val TAG = "MovieListFragment"
 
-class MovieListFragment: Fragment() {
+class MovieListFragment: Fragment(), IViewList {
 
     private lateinit var movieList: RecyclerView
     private lateinit var adapter: MoviesAdapter
+    private lateinit var presenter: PresenterList
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        bindPresenter()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,8 +45,14 @@ class MovieListFragment: Fragment() {
             false
         )
         initViews(view)
-        getMovies()
+        //getMovies()
         return view
+    }
+
+    override fun onViewCreated(view: View,
+                               savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        getDataSet()
     }
 
     private fun initViews(view: View) {
@@ -46,40 +61,7 @@ class MovieListFragment: Fragment() {
     }
 
     private fun getMovies(){
-        MoviesService.initRetrofit().getMovies()
-            .enqueue(
-                object : Callback<MovieList> {
-                    override fun onResponse(
-                        call: Call<MovieList>,
-                        response: Response<MovieList>
-                    ) {
-                        Log.d(TAG, "onResponse: $response")
-                        if (response.isSuccessful){
-                            updateAdapter(response.body())
-                        }else
-                            showError(response.message())
-                    }
 
-                    override fun onFailure(call: Call<MovieList>, t: Throwable) {
-                        Log.d(TAG, "onFailure: $t")
-                        showError(t.message ?: "Unknown error")
-                    }
-
-                }
-            )
-    }
-
-    private fun showError(errorMessage: String) {
-
-    }
-
-    private fun updateAdapter(body: MovieList?) {
-        body?.let{
-            adapter = MoviesAdapter(it) {movieDetail->
-                activity?.openMovieDetail(movieDetail)
-            }
-            movieList.adapter = adapter
-        } ?: showError("No response from server")
     }
 
     private fun FragmentActivity.openMovieDetail(movieDetail: MovieResponse){
@@ -87,5 +69,36 @@ class MovieListFragment: Fragment() {
             .replace(android.R.id.content, MovieDetailsFragment.newInstance(movieDetail))
             .addToBackStack(null)
             .commit()
+    }
+
+    override fun displayData(dataSet: MovieList) {
+        adapter = MoviesAdapter(dataSet) { movieDetail->
+            activity?.openMovieDetail(movieDetail)
+
+            // invoke the DetailsFragment
+            // invoke the PresenterDetails
+
+        }
+        movieList.adapter = adapter
+    }
+
+    override fun getDataSet() {
+        presenter.getData()
+    }
+
+    override fun bindPresenter() {
+        presenter = PresenterList()
+        presenter.bind(this)
+    }
+
+    override fun displayError(errorMessage: String) {
+        Toast.makeText(context,
+            errorMessage,
+            Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        presenter.onDestroy()
     }
 }
