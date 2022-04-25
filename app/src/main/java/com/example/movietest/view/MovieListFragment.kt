@@ -74,10 +74,6 @@ class MovieListFragment: Fragment(), IViewList {
     override fun displayData(dataSet: MovieList) {
         adapter = MoviesAdapter(dataSet) { movieDetail->
             activity?.openMovieDetail(movieDetail)
-
-            // invoke the DetailsFragment
-            // invoke the PresenterDetails
-
         }
         movieList.adapter = adapter
     }

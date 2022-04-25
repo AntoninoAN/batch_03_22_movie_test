@@ -6,7 +6,9 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_margin="10dp"
-    android:padding="4dp">
+    android:padding="4dp"
+    android:background="#ED0808"
+    android:clickable="true">
     <TextView
         android:id="@+id/tv_movie_detail_title"
         android:layout_width="0dp"
